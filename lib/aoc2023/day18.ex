@@ -8,10 +8,17 @@ defmodule Aoc2023.Day18 do
   """
   alias Aoc2023.Day18.DigPlan
 
+  defp dig_plan_2(color) do
+
+  end
+
+  def dig_plan_1(dir, distance) do
+    %DigPlan{direction: dir, distance: distance}
+  end
+
   defp parse_input do
-    file_path = "data/input_day18_test.txt"
+    file_path = "data/input_day18.txt"
     lines = Aoc2023.read_file(file_path)
-    # parse_lines(lines, [])
 
     parse = fn
       parse, [first_line | rest], acc ->
@@ -47,93 +54,19 @@ defmodule Aoc2023.Day18 do
     end
   end
 
-  # defp dig_line(map, map_pos, direction, distance) do
-  #   next_pos = move_direction(map_pos, direction, distance)
-  #   x0 = elem(map_pos, 0)
-  #   x1 = elem(next_pos, 0)
-  #   is_vertical = x0 == x1
-
-  #   map =
-  #     if is_vertical do
-  #       y0 = elem(map_pos, 1)
-  #       y1 = elem(next_pos, 1)
-  #       step = if y0 <= y1, do: 1, else: -1
-  #       y_range = y0..y1//step
-
-  #       Enum.reduce(y_range, map, fn y, acc ->
-  #         is_edge = y == y0 or y == y1
-  #         descriptor = if is_edge, do: :corner, else: :edge
-  #         Map.update(acc, y, [{x0, descriptor}], fn lst -> [{x0, descriptor} | lst] end)
-  #       end)
-  #     else
-  #       map
-  #     end
-
-  #   {map, next_pos}
-  # end
-
-  defp dig_line_2(map, map_pos, direction, distance) do
+  defp dig_line(map, map_pos, direction, distance) do
     next_pos = move_direction(map_pos, direction, distance)
     {[next_pos | map], next_pos}
   end
 
-  defp create_map_2(input, map, map_pos) do
+  defp create_map(input, map, map_pos) do
     case input do
       [line | rest] ->
-        {map, next_map_pos} = dig_line_2(map, map_pos, line.direction, line.distance)
-        create_map_2(rest, map, next_map_pos)
+        {map, next_map_pos} = dig_line(map, map_pos, line.direction, line.distance)
+        create_map(rest, map, next_map_pos)
 
       [] ->
         Enum.reverse(map)
-    end
-  end
-
-  # defp create_map(input, vertical_map, map_pos) do
-  #   case input do
-  #     [line | rest] ->
-  #       {map, next_map_pos} = dig_line(vertical_map, map_pos, line.direction, line.distance)
-  #       create_map(rest, map, next_map_pos)
-
-  #     [] ->
-  #       # to do, set the first and last keys  to :edge
-  #       first_key = vertical_map |> Map.keys() |> Enum.min()
-
-  #       vertical_map =
-  #         Map.update!(vertical_map, first_key, fn lst ->
-  #           Enum.map(lst, fn t -> {elem(t, 0), :edge} end)
-  #         end)
-
-  #       last_key = vertical_map |> Map.keys() |> Enum.max()
-
-  #       vertical_map =
-  #         Map.update!(vertical_map, last_key, fn lst ->
-  #           Enum.map(lst, fn t -> {elem(t, 0), :edge} end)
-  #         end)
-
-  #       vertical_map
-  #   end
-  # end
-
-  @spec line_area([{number(), :edge | :corner}], :inside | :outside, number()) :: number()
-  def line_area(vertical_list, state \\ :inside, acc \\ 0) do
-    case vertical_list do
-      [{n1, type1}, {n2, type2} | rest] when type1 == :corner and type2 == :corner ->
-        # acc = if state == :inside, do: acc + (n2 - n1 + 1), else: acc
-        acc = acc + (n2 - n1 + 1)
-        n2 = n2 + 1
-        # we sum 1 to n2, because we already counted n2 in the previous iteration doing n1 + 1
-        # n2 = if state == :inside, do: n2 + 1, else: n2
-        line_area([{n2, type2} | rest], state, acc)
-
-      [{n1, _}, {n2, type2} | rest] ->
-        acc = if state == :inside, do: acc + (n2 - n1 + 1), else: acc
-        n2 = if state == :inside, do: n2 + 1, else: n2
-        state = if state == :inside, do: :outside, else: :inside
-        line_area([{n2, type2} | rest], state, acc)
-
-      _ ->
-        IO.puts("acc = #{acc}")
-        acc
     end
   end
 
@@ -192,32 +125,36 @@ defmodule Aoc2023.Day18 do
     end
   end
 
+  def shoelace_formula(polygon, acc\\0) do
+    case polygon do
+      [{x1, y1}, {x2, y2} | rest] ->
+        acc = acc + (x1 * y2 - x2 * y1)
+        shoelace_formula([{x2, y2} | rest], acc)
+        _ ->
+          abs(acc) / 2
+      end
+  end
+
   def execute do
     lines = parse_input()
 
-    case lines do
-      [first_line | _] ->
-        IO.puts(
-          "First line: #{first_line.direction}, #{first_line.distance}, #{first_line.color}"
-        )
+    # case lines do
+    #   [first_line | _] ->
+    #     IO.puts(
+    #       "First line: #{first_line.direction}, #{first_line.distance}, #{first_line.color}"
+    #     )
 
-      [] ->
-        IO.puts("The file is empty.")
-    end
+    #   [] ->
+    #     IO.puts("The file is empty.")
+    # end
 
-    map = create_map_2(lines, [{0, 0}], {0, 0})
+    map = create_map(lines, [{0, 0}], {0, 0})
     perimeter_area = calculate_perimeter_area(map)
-    IO.inspect(map, label: "Map")
+    inside_area = shoelace_formula(map)
+    area = perimeter_area + inside_area
+    # IO.inspect(map, label: "Map")
     IO.puts("Perimeter Area: #{perimeter_area}")
-    # vertical_map = create_map(lines, %{}, {0, 0})
-    # IO.inspect(vertical_map, label: "Vertical Map")
-
-    # result =
-    #   Enum.reduce(vertical_map, 0, fn {_, value}, acc ->
-    #     value = Enum.sort(value, fn {a, _}, {b, _} -> a <= b end)
-    #     acc + line_area(value)
-    #   end)
-
-    # IO.puts("Result: #{result}")
+    IO.puts("Inside Area: #{inside_area}")
+    IO.puts("Area: #{area}")
   end
 end
