@@ -1,5 +1,5 @@
 defmodule Aoc2023.Day18.DigPlan do
-  defstruct direction: "", distance: 0, color: ""
+  defstruct direction: "", distance: 0
 end
 
 defmodule Aoc2023.Day18 do
@@ -9,14 +9,30 @@ defmodule Aoc2023.Day18 do
   alias Aoc2023.Day18.DigPlan
 
   defp dig_plan_2(color) do
+    case Regex.run(~r/\(#([\d|\w]{5})(\d)/, color) do
+      [_, hex_string, direction] ->
+        int_value = String.to_integer(hex_string, 16)
 
+        dir =
+          case direction do
+            "0" -> "R"
+            "1" -> "D"
+            "2" -> "L"
+            "3" -> "U"
+          end
+
+        %DigPlan{direction: dir, distance: int_value}
+
+      _ ->
+        raise "Invalid color format"
+    end
   end
 
   def dig_plan_1(dir, distance) do
-    %DigPlan{direction: dir, distance: distance}
+    %DigPlan{direction: dir, distance: String.to_integer(distance)}
   end
 
-  defp parse_input do
+  defp parse_input(star \\ 1) do
     file_path = "data/input_day18.txt"
     lines = Aoc2023.read_file(file_path)
 
@@ -27,7 +43,7 @@ defmodule Aoc2023.Day18 do
         acc =
           case split do
             [d, n, c] ->
-              dig_plan = %DigPlan{direction: d, distance: String.to_integer(n), color: c}
+              dig_plan = if star == 1, do: dig_plan_1(d, n), else: dig_plan_2(c)
               [dig_plan | acc]
 
             _ ->
@@ -125,36 +141,34 @@ defmodule Aoc2023.Day18 do
     end
   end
 
-  def shoelace_formula(polygon, acc\\0) do
+  def shoelace_formula(polygon, acc \\ 0) do
     case polygon do
       [{x1, y1}, {x2, y2} | rest] ->
         acc = acc + (x1 * y2 - x2 * y1)
         shoelace_formula([{x2, y2} | rest], acc)
-        _ ->
-          abs(acc) / 2
-      end
+
+      _ ->
+        abs(acc) / 2
+    end
   end
 
-  def execute do
-    lines = parse_input()
+  defp execute_helper(input) do
 
-    # case lines do
-    #   [first_line | _] ->
-    #     IO.puts(
-    #       "First line: #{first_line.direction}, #{first_line.distance}, #{first_line.color}"
-    #     )
-
-    #   [] ->
-    #     IO.puts("The file is empty.")
-    # end
-
-    map = create_map(lines, [{0, 0}], {0, 0})
+    map = create_map(input, [{0, 0}], {0, 0})
     perimeter_area = calculate_perimeter_area(map)
     inside_area = shoelace_formula(map)
     area = perimeter_area + inside_area
-    # IO.inspect(map, label: "Map")
     IO.puts("Perimeter Area: #{perimeter_area}")
     IO.puts("Inside Area: #{inside_area}")
     IO.puts("Area: #{area}")
+  end
+  def execute do
+    lines = parse_input()
+    execute_helper(lines)
+  end
+
+  def execute_2 do
+    lines = parse_input(2)
+    execute_helper(lines)
   end
 end

@@ -8,6 +8,6 @@ defmodule Aoc2023.Application do
   end
 
   defp main do
-    Aoc2023.Day18.execute()
+    Aoc2023.Day19.execute_1()
   end
 end
