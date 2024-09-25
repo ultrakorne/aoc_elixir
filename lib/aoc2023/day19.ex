@@ -121,28 +121,74 @@ defmodule Aoc2023.Day19 do
   end
 
   defp parse_input() do
-    file_path = "data/input_day19_test.txt"
+    file_path = "data/input_day19.txt"
     lines = Aoc2023.read_file(file_path)
     parse_input_aux(lines, %{}, [])
   end
 
-  defp rate_piece(workflows, rating) do
+  @spec rate_piece_aux(Rule.t(), Rating.t()) :: Rule.next_t() | :next
+  defp rate_piece_aux(rule, rating) do
+    case rule.condition do
+      "<" ->
+        piece_rating = Map.get(rating, String.to_atom(rule.category))
+        if piece_rating < rule.value, do: rule.next, else: :next
 
-  end
+      ">" ->
+        piece_rating = Map.get(rating, String.to_atom(rule.category))
+        if piece_rating > rule.value, do: rule.next, else: :next
 
-  defp execute_workflows(workflows, ratings) do
-    case ratings do
-      [rating | rest] ->
-        rate_piece(workflows, rating)
-        execute_workflows(workflows, rest)
-      [] ->
-        workflows
+      "" ->
+        rule.next
+
+      _ ->
+        raise "Invalid condition"
     end
   end
+
+  defp rate_piece([rule | rest], rating) do
+    next = rate_piece_aux(rule, rating)
+
+    if next == :next do
+      rate_piece(rest, rating)
+    else
+      next
+    end
+  end
+
+  @spec execute_workflows(%{String.t() => Workflow.t()}, [Rating.t()], integer(), String.t()) ::
+          integer()
+  defp execute_workflows(workflows, ratings, acc \\ 0, workflow_id \\ "in") do
+    case ratings do
+      [rating | rest] ->
+        first_workflow = Map.get(workflows, workflow_id)
+        result = rate_piece(first_workflow.rules, rating)
+
+        case result do
+          :accept ->
+            acc =
+              rating
+              |> Map.from_struct()
+              |> Enum.reduce(acc, fn {_, value}, acc2 -> acc2 + value end)
+
+            execute_workflows(workflows, rest, acc)
+
+          :reject ->
+            execute_workflows(workflows, rest, acc)
+
+          next_workflow_id when is_binary(next_workflow_id) ->
+            execute_workflows(workflows, ratings, acc, next_workflow_id)
+        end
+
+      [] ->
+        acc
+    end
+  end
+
   def execute_1 do
     IO.puts("Day 19 - Part 1")
     {workflows, ratings} = parse_input()
     result = execute_workflows(workflows, ratings)
-    IO.inspect(workflows)
+    # IO.inspect(workflows)
+    IO.puts("Result: #{result}")
   end
 end
