@@ -121,7 +121,7 @@ defmodule Aoc2023.Day19 do
   end
 
   defp parse_input() do
-    file_path = "data/input_day19.txt"
+    file_path = "data/input_day19_test.txt"
     lines = Aoc2023.read_file(file_path)
     parse_input_aux(lines, %{}, [])
   end
@@ -184,11 +184,89 @@ defmodule Aoc2023.Day19 do
     end
   end
 
+  defp check_rule(rule) do
+    cond do
+      rule.condition == "" ->
+        {:end, Range.new(0, 0), rule.next}
+
+      true ->
+        range =
+          case {rule.condition, rule.next} do
+            # {"<", :reject} -> Range.new(rule.value, 4000)
+            {"<", _} -> Range.new(0, rule.value - 1)
+            # {">", :reject} -> Range.new(0, rule.value)
+            {">", _} -> Range.new(rule.value + 1, 4000)
+            _ -> raise "Invalid condition"
+          end
+
+        {rule.category, range, rule.next}
+    end
+  end
+
+  defp flip_result({category, range, next}) do
+    case range.first do
+      0 ->
+        {category, Range.new(range.last + 1, 4000), :flipped}
+
+      _ ->
+        {category, Range.new(0, range.first - 1), :flipped}
+    end
+
+  end
+  defp checking_workflow_rules(workflows, rules, acc, solution) do
+    case rules do
+      [rule | rest] ->
+        rule_result = check_rule(rule)
+
+        case rule_result do
+          # {:end, _, _} ->
+          #   IO.inspect(rule_result, label: "\nRule result: ")
+          #   [rule_result | acc] |> Enum.reverse()
+
+          {_, _, :accept} ->
+            IO.inspect(rule_result, label: "\nRule result: ")
+            sol = [rule_result | acc] |> Enum.reverse()
+            new_solution = [sol | solution]
+
+            flipped_result = flip_result(rule_result)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_solution)
+
+          {_, _, :reject} ->
+            flipped_result = flip_result(rule_result)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], solution)
+
+          {_, _, next} ->
+            IO.inspect(rule_result, label: "\nRule result: ")
+            next_workflow = Map.get(workflows, next)
+            # new_solution = combination_workflows(workflows, next, [rule_result | acc], solution)
+            new_solution = checking_workflow_rules(workflows, next_workflow.rules, [rule_result | acc], solution)
+            flipped_result = flip_result(rule_result)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_solution)
+        end
+
+      [] ->
+        solution
+    end
+  end
+
+  defp combination_workflows(workflows, workflow_id \\ "in", acc \\ [], solution \\[]) do
+    current_workflow = Map.get(workflows, workflow_id)
+
+    list_result = checking_workflow_rules(workflows, current_workflow.rules, acc, solution)
+    list_result
+  end
+
   def execute_1 do
     IO.puts("Day 19 - Part 1")
     {workflows, ratings} = parse_input()
     result = execute_workflows(workflows, ratings)
     # IO.inspect(workflows)
     IO.puts("Result: #{result}")
+  end
+
+  def execute_2 do
+    {workflows, _} = parse_input()
+    result = combination_workflows(workflows)
+    IO.inspect(result)
   end
 end
