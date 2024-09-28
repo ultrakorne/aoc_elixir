@@ -187,14 +187,12 @@ defmodule Aoc2023.Day19 do
   defp check_rule(rule) do
     cond do
       rule.condition == "" ->
-        {:end, Range.new(0, 0), rule.next}
+        {:end, Range.new(1, 1), rule.next}
 
       true ->
         range =
           case {rule.condition, rule.next} do
-            # {"<", :reject} -> Range.new(rule.value, 4000)
-            {"<", _} -> Range.new(0, rule.value - 1)
-            # {">", :reject} -> Range.new(0, rule.value)
+            {"<", _} -> Range.new(1, rule.value - 1)
             {">", _} -> Range.new(rule.value + 1, 4000)
             _ -> raise "Invalid condition"
           end
@@ -203,56 +201,137 @@ defmodule Aoc2023.Day19 do
     end
   end
 
-  defp flip_result({category, range, next}) do
+  defp flip_result({category, range, _}) do
     case range.first do
-      0 ->
+      1 ->
         {category, Range.new(range.last + 1, 4000), :flipped}
 
       _ ->
-        {category, Range.new(0, range.first - 1), :flipped}
+        {category, Range.new(1, range.first - 1), :flipped}
     end
-
   end
-  defp checking_workflow_rules(workflows, rules, acc, solution) do
+
+  defp range_intersection(range1, range2) do
+    if Range.disjoint?(range1, range2) do
+      nil
+    else
+      Range.new(max(range1.first, range2.first), min(range1.last, range2.last))
+    end
+  end
+
+  defp combin_n(solution, keys \\["a", "m", "s", "x"], acc\\1) do
+    case keys do
+      [key | rest] ->
+        range = if Map.has_key?(solution, key) do Map.get(solution, key) else Range.new(1, 4000) end
+        combin_n(solution, rest, acc * (range.last - range.first + 1))
+      [] -> acc
+    end
+  end
+
+  defp intersect(sol, processed, acc\\[]) do
+    case processed do
+      [p | rest] ->
+        sol_interesected = Map.merge(sol, p, fn _, r1, r2 -> range_intersection(r1, r2) end)
+        has_nil_key = Enum.any?(Map.values(sol_interesected), fn v -> v == nil end)
+        if has_nil_key do
+          intersect(sol, rest, acc)
+        else
+          intersect(sol, rest, [sol_interesected | acc])
+        end
+        [] -> acc
+    end
+  end
+
+  def combinations(solutions, processed\\[], acc\\0) do
+    case solutions do
+      [sol | rest] ->
+        IO.inspect(sol, label: "Solution +: ")
+        c = combin_n(sol)
+        IO.puts("Combin: #{c}")
+        # intersect current solution with all previously processed
+        all_previous_interesections = intersect(sol, processed)
+        IO.inspect(all_previous_interesections, label: "All previous intersections: ")
+        remaining_c = c - combinations(all_previous_interesections)
+        IO.puts("Remaining: #{remaining_c}")
+
+        processed = [sol | processed]
+        combinations(rest, processed, acc + remaining_c)
+      [] ->
+        acc
+    end
+  end
+
+  defp process_solution(solution, acc \\ %{}) do
+    case solution do
+      [{:end, _, _} | rest] ->
+        process_solution(rest, acc)
+
+      [{category, range, _} | rest] ->
+        {_, new_map} =
+          Map.get_and_update(acc, category, fn current_value ->
+            case current_value do
+              nil ->
+                {nil, range}
+
+              range_value ->
+                new_range = range_intersection(range_value, range)
+                {current_value, new_range}
+            end
+          end)
+
+        process_solution(rest, new_map)
+
+      [] ->
+        acc
+    end
+  end
+
+  defp checking_workflow_rules(workflows, rules, acc, solution, final_solution) do
     case rules do
       [rule | rest] ->
         rule_result = check_rule(rule)
 
         case rule_result do
-          # {:end, _, _} ->
-          #   IO.inspect(rule_result, label: "\nRule result: ")
-          #   [rule_result | acc] |> Enum.reverse()
-
           {_, _, :accept} ->
-            IO.inspect(rule_result, label: "\nRule result: ")
             sol = [rule_result | acc] |> Enum.reverse()
+            solution_processed = process_solution(sol)
+            final_solution = [solution_processed | final_solution]
+            IO.inspect(solution_processed, label: "\nSolution processed: ")
+
             new_solution = [sol | solution]
 
             flipped_result = flip_result(rule_result)
-            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_solution)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_solution, final_solution)
 
           {_, _, :reject} ->
             flipped_result = flip_result(rule_result)
-            checking_workflow_rules(workflows, rest, [flipped_result | acc], solution)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], solution, final_solution)
 
           {_, _, next} ->
-            IO.inspect(rule_result, label: "\nRule result: ")
             next_workflow = Map.get(workflows, next)
-            # new_solution = combination_workflows(workflows, next, [rule_result | acc], solution)
-            new_solution = checking_workflow_rules(workflows, next_workflow.rules, [rule_result | acc], solution)
+
+            {new_solution, new_final_solution} =
+              checking_workflow_rules(
+                workflows,
+                next_workflow.rules,
+                [rule_result | acc],
+                solution,
+                final_solution
+              )
+
             flipped_result = flip_result(rule_result)
-            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_solution)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_solution, new_final_solution)
         end
 
       [] ->
-        solution
+        {solution, final_solution}
     end
   end
 
-  defp combination_workflows(workflows, workflow_id \\ "in", acc \\ [], solution \\[]) do
-    current_workflow = Map.get(workflows, workflow_id)
+  defp combination_workflows(workflows) do
+    current_workflow = Map.get(workflows, "in")
 
-    list_result = checking_workflow_rules(workflows, current_workflow.rules, acc, solution)
+    list_result = checking_workflow_rules(workflows, current_workflow.rules, [], [], [])
     list_result
   end
 
@@ -266,7 +345,10 @@ defmodule Aoc2023.Day19 do
 
   def execute_2 do
     {workflows, _} = parse_input()
-    result = combination_workflows(workflows)
+    {_, result} = combination_workflows(workflows)
     IO.inspect(result)
+    comb = combinations(result)
+    IO.puts("Comb: #{comb}")
+
   end
 end
