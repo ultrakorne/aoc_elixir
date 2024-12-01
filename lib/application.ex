@@ -1,4 +1,4 @@
-defmodule Aoc2023.Application do
+defmodule Aoc.Application do
   use Application
 
   @spec start(any(), any()) :: {:ok, pid()}
@@ -8,6 +8,7 @@ defmodule Aoc2023.Application do
   end
 
   defp main do
-    Aoc2023.Day19.execute_2()
+    result = Aoc.Y2024.Day1.execute_2()
+    IO.puts("Result: #{result}")
   end
 end

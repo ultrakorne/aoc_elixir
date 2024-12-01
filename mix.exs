@@ -1,9 +1,9 @@
-defmodule Aoc2023.MixProject do
+defmodule Aoc.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :aoc_2023,
+      app: :aoc,
       version: "0.1.0",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
@@ -15,7 +15,7 @@ defmodule Aoc2023.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Aoc2023.Application, []}
+      mod: {Aoc.Application, []}
     ]
   end
 
@@ -24,7 +24,8 @@ defmodule Aoc2023.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:poison, "~> 6.0"}
     ]
   end
 end

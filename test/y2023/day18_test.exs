@@ -1,9 +1,8 @@
-defmodule Aoc2023.Day18Test do
+defmodule Aoc.Y2023.Day18Test do
   use ExUnit.Case
-  doctest Aoc2023.Day18
+  doctest Aoc.Y2023.Day18
 
   test "calculate perimiter area" do
-
     polygon = [
       {0, 0},
       {3, 0},
@@ -13,6 +12,7 @@ defmodule Aoc2023.Day18Test do
       {0, 2},
       {0, 0}
     ]
-    assert Aoc2023.Day18.calculate_perimeter_area(polygon) == 6
+
+    assert Aoc.Y2023.Day18.calculate_perimeter_area(polygon) == 6
   end
 end

@@ -1,4 +1,4 @@
-defmodule Aoc2023.Day19.Workflow do
+defmodule Aoc.Y2023.Day19.Workflow do
   @moduledoc """
   Workflow for the day 19.
   """
@@ -6,11 +6,11 @@ defmodule Aoc2023.Day19.Workflow do
 
   @type t :: %__MODULE__{
           id: String.t(),
-          rules: [Aoc2023.Day19.Rule.t()]
+          rules: [Aoc.Y2023.Day19.Rule.t()]
         }
 end
 
-defmodule Aoc2023.Day19.Rule do
+defmodule Aoc.Y2023.Day19.Rule do
   @moduledoc """
   Rule for the workflow.
   """
@@ -25,7 +25,7 @@ defmodule Aoc2023.Day19.Rule do
         }
 end
 
-defmodule Aoc2023.Day19.Rating do
+defmodule Aoc.Y2023.Day19.Rating do
   @moduledoc """
   Part rating for the day 19.
   """
@@ -39,8 +39,8 @@ defmodule Aoc2023.Day19.Rating do
         }
 end
 
-defmodule Aoc2023.Day19 do
-  alias Aoc2023.Day19.{Rule, Workflow, Rating}
+defmodule Aoc.Y2023.Day19 do
+  alias Aoc.Y2023.Day19.{Rule, Workflow, Rating}
 
   defp parse_rules(rules_str, acc \\ []) do
     parse_rule = fn rule_str ->
@@ -121,8 +121,8 @@ defmodule Aoc2023.Day19 do
   end
 
   defp parse_input() do
-    file_path = "data/input_day19_test.txt"
-    lines = Aoc2023.read_file(file_path)
+    file_path = "data/input_day19.txt"
+    lines = Aoc.Helper.read_file(file_path)
     parse_input_aux(lines, %{}, [])
   end
 
@@ -219,43 +219,51 @@ defmodule Aoc2023.Day19 do
     end
   end
 
-  defp combin_n(solution, keys \\["a", "m", "s", "x"], acc\\1) do
+  defp combin_n(solution, keys \\ ["a", "m", "s", "x"], acc \\ 1) do
     case keys do
       [key | rest] ->
-        range = if Map.has_key?(solution, key) do Map.get(solution, key) else Range.new(1, 4000) end
+        range =
+          if Map.has_key?(solution, key) do
+            Map.get(solution, key)
+          else
+            Range.new(1, 4000)
+          end
+
         combin_n(solution, rest, acc * (range.last - range.first + 1))
-      [] -> acc
+
+      [] ->
+        acc
     end
   end
 
-  defp intersect(sol, processed, acc\\[]) do
+  defp intersect(sol, processed, acc \\ []) do
     case processed do
       [p | rest] ->
         sol_interesected = Map.merge(sol, p, fn _, r1, r2 -> range_intersection(r1, r2) end)
         has_nil_key = Enum.any?(Map.values(sol_interesected), fn v -> v == nil end)
+
         if has_nil_key do
           intersect(sol, rest, acc)
         else
           intersect(sol, rest, [sol_interesected | acc])
         end
-        [] -> acc
+
+      [] ->
+        acc
     end
   end
 
-  def combinations(solutions, processed\\[], acc\\0) do
+  def combinations(solutions, processed \\ [], acc \\ 0) do
     case solutions do
       [sol | rest] ->
-        IO.inspect(sol, label: "Solution +: ")
         c = combin_n(sol)
-        IO.puts("Combin: #{c}")
         # intersect current solution with all previously processed
         all_previous_interesections = intersect(sol, processed)
-        IO.inspect(all_previous_interesections, label: "All previous intersections: ")
         remaining_c = c - combinations(all_previous_interesections)
-        IO.puts("Remaining: #{remaining_c}")
 
         processed = [sol | processed]
         combinations(rest, processed, acc + remaining_c)
+
       [] ->
         acc
     end
@@ -286,7 +294,7 @@ defmodule Aoc2023.Day19 do
     end
   end
 
-  defp checking_workflow_rules(workflows, rules, acc, solution, final_solution) do
+  defp checking_workflow_rules(workflows, rules, acc, final_solution) do
     case rules do
       [rule | rest] ->
         rule_result = check_rule(rule)
@@ -296,42 +304,38 @@ defmodule Aoc2023.Day19 do
             sol = [rule_result | acc] |> Enum.reverse()
             solution_processed = process_solution(sol)
             final_solution = [solution_processed | final_solution]
-            IO.inspect(solution_processed, label: "\nSolution processed: ")
-
-            new_solution = [sol | solution]
 
             flipped_result = flip_result(rule_result)
-            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_solution, final_solution)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], final_solution)
 
           {_, _, :reject} ->
             flipped_result = flip_result(rule_result)
-            checking_workflow_rules(workflows, rest, [flipped_result | acc], solution, final_solution)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], final_solution)
 
           {_, _, next} ->
             next_workflow = Map.get(workflows, next)
 
-            {new_solution, new_final_solution} =
+            new_final_solution =
               checking_workflow_rules(
                 workflows,
                 next_workflow.rules,
                 [rule_result | acc],
-                solution,
                 final_solution
               )
 
             flipped_result = flip_result(rule_result)
-            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_solution, new_final_solution)
+            checking_workflow_rules(workflows, rest, [flipped_result | acc], new_final_solution)
         end
 
       [] ->
-        {solution, final_solution}
+        final_solution
     end
   end
 
   defp combination_workflows(workflows) do
     current_workflow = Map.get(workflows, "in")
 
-    list_result = checking_workflow_rules(workflows, current_workflow.rules, [], [], [])
+    list_result = checking_workflow_rules(workflows, current_workflow.rules, [], [])
     list_result
   end
 
@@ -339,16 +343,14 @@ defmodule Aoc2023.Day19 do
     IO.puts("Day 19 - Part 1")
     {workflows, ratings} = parse_input()
     result = execute_workflows(workflows, ratings)
-    # IO.inspect(workflows)
-    IO.puts("Result: #{result}")
+    IO.puts("Result day19 star 1: #{result}")
   end
 
   def execute_2 do
+    IO.puts("Day 19 - Part 2")
     {workflows, _} = parse_input()
-    {_, result} = combination_workflows(workflows)
-    IO.inspect(result)
+    result = combination_workflows(workflows)
     comb = combinations(result)
-    IO.puts("Comb: #{comb}")
-
+    IO.puts("Result day19 star 2: #{comb}")
   end
 end

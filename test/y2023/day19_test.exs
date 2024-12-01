@@ -1,6 +1,6 @@
-defmodule Aoc2023.Day19Test do
+defmodule Aoc.Y2023.Day19Test do
   use ExUnit.Case
-  doctest Aoc2023.Day19
+  doctest Aoc.Y2023.Day19
 
   test "union solutions" do
     sol1 = %{
@@ -32,7 +32,7 @@ defmodule Aoc2023.Day19Test do
     }
 
     solutions = [sol1, sol2, sol3, sol4]
-    comb = Aoc2023.Day19.combinations(solutions)
+    comb = Aoc.Y2023.Day19.combinations(solutions)
     IO.puts("comb: #{comb}")
     # assert
   end

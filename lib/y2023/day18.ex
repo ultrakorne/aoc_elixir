@@ -1,12 +1,12 @@
-defmodule Aoc2023.Day18.DigPlan do
+defmodule Aoc.Y2023.Day18.DigPlan do
   defstruct direction: "", distance: 0
 end
 
-defmodule Aoc2023.Day18 do
+defmodule Aoc.Y2023.Day18 do
   @moduledoc """
   Day 18 of Advent of Code 2023.
   """
-  alias Aoc2023.Day18.DigPlan
+  alias Aoc.Y2023.Day18.DigPlan
 
   defp dig_plan_2(color) do
     case Regex.run(~r/\(#([\d|\w]{5})(\d)/, color) do
@@ -34,7 +34,7 @@ defmodule Aoc2023.Day18 do
 
   defp parse_input(star \\ 1) do
     file_path = "data/input_day18.txt"
-    lines = Aoc2023.read_file(file_path)
+    lines = Aoc.Helper.read_file(file_path)
 
     parse = fn
       parse, [first_line | rest], acc ->
@@ -153,7 +153,6 @@ defmodule Aoc2023.Day18 do
   end
 
   defp execute_helper(input) do
-
     map = create_map(input, [{0, 0}], {0, 0})
     perimeter_area = calculate_perimeter_area(map)
     inside_area = shoelace_formula(map)
@@ -162,6 +161,7 @@ defmodule Aoc2023.Day18 do
     IO.puts("Inside Area: #{inside_area}")
     IO.puts("Area: #{area}")
   end
+
   def execute do
     lines = parse_input()
     execute_helper(lines)
