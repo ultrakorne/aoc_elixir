@@ -1,6 +1,6 @@
 defmodule Aoc.Y2024.Day2 do
   defp parse_input() do
-    "data/2024/day2_test.txt"
+    "data/2024/day2.txt"
     |> File.read!()
     |> String.split("\r\n", trim: true)
     |> Enum.map(fn x ->
@@ -10,7 +10,7 @@ defmodule Aoc.Y2024.Day2 do
 
   @spec is_safe?([integer()]) :: boolean()
   defp is_safe?([first | rest]) do
-    [second | _] = rest
+    second = hd(rest)
     order = if second > first, do: :asc, else: :desc
 
     rest
@@ -25,6 +25,22 @@ defmodule Aoc.Y2024.Day2 do
     |> Kernel.not()
   end
 
+  defp is_safe_dampen_aux?(list, order, prev \\ []) do
+    case {list, order} do
+      {[f, s | rest], :asc} when s > f and s - f <= 3 ->
+        is_safe_dampen_aux?([s | rest], :asc, prev ++ [f])
+
+      {[f, s | rest], :desc} when s < f and f - s <= 3 ->
+        is_safe_dampen_aux?([s | rest], :desc, prev ++ [f])
+
+      {[f, s | rest], _} ->
+        is_safe?(prev ++ [f] ++ rest) or is_safe?(prev ++ [s] ++ rest)
+
+      {[_], _} ->
+        true
+    end
+  end
+
   @spec is_safe_dampen?([integer()]) :: boolean()
   defp is_safe_dampen?([first | rest]) do
     {_, result} =
@@ -32,35 +48,9 @@ defmodule Aoc.Y2024.Day2 do
         if x > acc, do: {x, sign + 1}, else: {x, sign - 1}
       end)
 
-    IO.inspect([first | rest], charlists: :as_lists)
-    IO.inspect(result)
     order = if result > 0, do: :asc, else: :desc
-    IO.inspect(order)
 
-    out =
-      rest
-      |> Enum.reduce_while({first, 0}, fn x, {acc, err} ->
-        case order do
-          :asc
-          when x > acc and x - acc <= 3 ->
-            {:cont, {x, err}}
-
-          :desc
-          when x < acc and acc - x <= 3 ->
-            {:cont, {x, err}}
-
-          _ ->
-            if err > 0, do: {:halt, nil}, else: {:cont, {acc, 1}}
-        end
-      end)
-      |> is_nil()
-      |> Kernel.not()
-
-    IO.inspect(out)
-    out = out || is_safe?(rest)
-    IO.inspect("out after #{out}")
-    IO.puts("----")
-    out
+    is_safe_dampen_aux?([first | rest], order)
   end
 
   def execute_1() do
