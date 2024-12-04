@@ -12,10 +12,12 @@ defmodule Aoc.Y2024.Day3 do
   end
 
   def execute_1() do
+    input = File.read!("data/2024/day3.txt")
+
     ~r/mul\((\d+,\d+)\)/
-    |> parse_input()
+    |> Regex.scan(input)
     |> Enum.reduce(0, fn [_, y | _], acc ->
-      [f, s | _] = get_int_array(y)
+      [f, s | _] = String.split(y, ",") |> Enum.map(&String.to_integer/1)
       acc + f * s
     end)
   end
