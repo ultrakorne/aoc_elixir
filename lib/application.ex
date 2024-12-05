@@ -8,7 +8,7 @@ defmodule Aoc.Application do
   end
 
   defp main do
-    result = Aoc.Y2024.Day4.execute_2()
+    result = Aoc.Y2024.Day5.execute_2()
     IO.inspect(result)
   end
 end
