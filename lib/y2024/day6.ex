@@ -44,6 +44,8 @@ defmodule Aoc.Y2024.Day6 do
   defp rotate_dir(:south), do: :west
   defp rotate_dir(:west), do: :north
 
+  defp sum_vec({x1, y1}, {x2, y2}), do: {x1 + x2, y1 + y2}
+
   defp walk_map(map, guard_pos) do
     guard_cell = Map.get(map, guard_pos)
     dir = guard_cell.guard_dir
@@ -51,7 +53,11 @@ defmodule Aoc.Y2024.Day6 do
 
     # if already visited, and current direction rotate is equal to that, there might be a loop if put an obstacle ahead
     if rotate_dir(dir) == guard_cell.visited do
-      IO.puts("potential Loop detected!")
+      IO.inspect(guard_pos, label: "potential Loop detected!")
+      placing_rock = sum_vec(dir_vec, guard_pos)
+      IO.inspect(placing_rock, label: "Placing rock at")
+      # 6,3 - 7,6 - 7,7
+      # need an array of directions
     end
 
     guard_cell = %Cell{guard_cell | visited: dir, guard_dir: :none}
