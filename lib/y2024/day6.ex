@@ -21,7 +21,7 @@ defmodule Aoc.Y2024.Day6 do
 
   def execute_1() do
     {map, guard_pos} =
-      Aoc.Helper.parse_grid("data/2024/day6.txt")
+      Aoc.Helper.parse_grid("data/2024/day6_test.txt")
       |> Enum.map_reduce(nil, fn {key, value}, acc ->
         case value do
           "." -> {{key, %Cell{}}, acc}
@@ -50,6 +50,10 @@ defmodule Aoc.Y2024.Day6 do
     dir_vec = guard_dir_to_vec(dir)
 
     # if already visited, and current direction rotate is equal to that, there might be a loop if put an obstacle ahead
+    if rotate_dir(dir) == guard_cell.visited do
+      IO.puts("potential Loop detected!")
+    end
+
     guard_cell = %Cell{guard_cell | visited: dir, guard_dir: :none}
     map = Map.put(map, guard_pos, guard_cell)
 
