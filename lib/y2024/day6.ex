@@ -74,19 +74,75 @@ defmodule Aoc.Y2024.Day6 do
     end
   end
 
+  defp detect_loop_aux(map, {x, y}, dir) do
+    # TODO, next post should already consider if there is an obstacle and rotate?
+    next_pos = sum_vec({x, y}, guard_dir_to_vec(dir))
+    next_cell = Map.get(map, next_pos)
+
+    {dir, next_pos, next_cell} =
+      if next_cell.content == :obstructed do
+        new_dir = rotate_dir(dir)
+        next_pos = sum_vec({x, y}, guard_dir_to_vec(new_dir))
+        next_cell = Map.get(map, next_pos)
+        {new_dir, next_pos, next_cell}
+      else
+        {dir, next_pos, next_cell}
+      end
+
+    cond do
+      next_cell == nil ->
+        0
+
+      Enum.member?(next_cell.visited, dir) ->
+        1
+
+      true ->
+        # rotate
+        new_dir = if next_cell.content == :obstructed, do: rotate_dir(dir), else: dir
+        # update map with new direction
+        current_cell = Map.get(map, {x, y})
+
+        updated_cell = %Cell{
+          current_cell
+          | visited: [new_dir | current_cell.visited],
+            guard_dir: :none
+        }
+
+        map = Map.put(map, guard_pos, guard_cell)
+        detect_loop_aux(map, next_pos, new_dir)
+
+        # call recursv
+    end
+  end
+
   defp detect_loop(guard_cell, guard_pos, map) do
     dir = guard_cell.guard_dir
     dir_vec = guard_dir_to_vec(dir)
-    guard_rotated = rotate_dir(dir)
-    visited_line = prev_visited_in_line(map, guard_pos, guard_rotated)
-
-    if Enum.member?(visited_line, guard_rotated) do
-      placing_rock = sum_vec(dir_vec, guard_pos)
-      IO.inspect(placing_rock, label: "Placing rock at")
-      1
-    else
+    rock_placement = sum_vec(guard_pos, dir_vec)
+    rock_cell = Map.get(map, rock_placement)
+    # if the cell where we want to place the rock was visited in the past, we cannot place a rock
+    if rock_cell == nil or rock_cell.content == :obstructed or rock_cell.visited != [] do
+      IO.puts("Cannot place rock because next cell was visited, is nill or has already a rock")
       0
+    else
+      guard_rotated = rotate_dir(dir)
+      updated_rock_cell = %Cell{rock_cell | content: :obstructed}
+      map = Map.put(map, rock_placement, updated_rock_cell)
+
+      has_loop = detect_loop_aux(map, guard_pos, guard_rotated)
+      has_loop
     end
+
+    # guard_rotated = rotate_dir(dir)
+    # visited_line = prev_visited_in_line(map, guard_pos, guard_rotated)
+
+    # if Enum.member?(visited_line, guard_rotated) do
+    #   placing_rock = sum_vec(dir_vec, guard_pos)
+    #   IO.inspect(placing_rock, label: "Placing rock at")
+    #   1
+    # else
+    #   0
+    # end
   end
 
   defp walk_map(map, guard_pos, loops \\ 0) do
