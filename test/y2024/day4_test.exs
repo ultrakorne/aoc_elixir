@@ -4,9 +4,7 @@ defmodule Aoc.Y2024.Day4Test do
 
   test "test direction" do
     dir = Day4.get_directions(:n, 3, {4, 0})
-
     assert dir == [{3, 0}, {2, 0}, {1, 0}]
-    IO.inspect(dir)
   end
 
   test "check xmas match" do
@@ -36,6 +34,5 @@ defmodule Aoc.Y2024.Day4Test do
 
     result = Day4.check_x_mas_at(input, 2, 2)
     assert result
-    IO.inspect(result, label: "result x mas")
   end
 end
