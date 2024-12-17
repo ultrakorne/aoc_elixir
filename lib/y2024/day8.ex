@@ -10,7 +10,7 @@ defmodule Aoc.Y2024.Day8 do
     |> Enum.group_by(fn {_, value} -> value end, fn {key, _} -> key end)
   end
 
-  def find_antinodes_list(lst, bounds, acc \\ []) when is_list(lst) do
+  def find_antinodes_list(lst, bounds, find_antinodes_func, acc \\ []) when is_list(lst) do
     case lst do
       [_] ->
         acc
@@ -18,9 +18,9 @@ defmodule Aoc.Y2024.Day8 do
       [c1 | rest] ->
         new_acc =
           rest
-          |> Enum.flat_map(fn c2 -> find_antinodes(c1, c2, bounds) end)
+          |> Enum.flat_map(fn c2 -> find_antinodes_func.(c1, c2, bounds) end)
 
-        find_antinodes_list(rest, bounds, new_acc ++ acc)
+        find_antinodes_list(rest, bounds, find_antinodes_func, new_acc ++ acc)
     end
   end
 
@@ -35,12 +35,12 @@ defmodule Aoc.Y2024.Day8 do
   end
 
   def find_antinodes_2(c1, c2, bounds) do
-    right_side = find_antinodes_line(c1, c2, bounds)
+    right_side = find_antinodes_line(c1, c2, bounds, [c1, c2])
     all_antinodes = find_antinodes_line(c2, c1, bounds, right_side)
     all_antinodes
   end
 
-  defp find_antinodes_line(c1, c2, bounds, acc \\ []) do
+  defp find_antinodes_line(c1, c2, bounds, acc) do
     case find_antinode(c1, c2, bounds) do
       nil -> acc
       n -> find_antinodes_line(c2, n, bounds, [n | acc])
@@ -57,8 +57,8 @@ defmodule Aoc.Y2024.Day8 do
     x < 0 or x > max_x or y < 0 or y > max_y
   end
 
-  def execute_1() do
-    grid = parse_grid("data/2024/day8.txt")
+  defp execute(file, find_antinodes_func) do
+    grid = parse_grid(file)
     bounds = grid_size(grid)
     signal_map = grid |> frequency_map()
 
@@ -66,24 +66,17 @@ defmodule Aoc.Y2024.Day8 do
     |> Map.keys()
     |> Enum.reduce([], fn k, acc ->
       signal_nodes = Map.get(signal_map, k)
-      find_antinodes_list(signal_nodes, bounds, acc)
+      find_antinodes_list(signal_nodes, bounds, find_antinodes_func, acc)
     end)
     |> Enum.uniq()
     |> Enum.count()
   end
 
-  def execute_2() do
-    grid = parse_grid("data/2024/day8_test.txt")
-    bounds = grid_size(grid)
-    signal_map = grid |> frequency_map()
+  def execute_1() do
+    execute("data/2024/day8.txt", &find_antinodes/3)
+  end
 
-    signal_map
-    |> Map.keys()
-    |> Enum.reduce([], fn k, acc ->
-      signal_nodes = Map.get(signal_map, k)
-      find_antinodes_list(signal_nodes, bounds, acc)
-    end)
-    |> Enum.uniq()
-    |> Enum.count()
+  def execute_2() do
+    execute("data/2024/day8.txt", &find_antinodes_2/3)
   end
 end
