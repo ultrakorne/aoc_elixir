@@ -32,8 +32,6 @@ defmodule Aoc.Y2023.Day19Test do
     }
 
     solutions = [sol1, sol2, sol3, sol4]
-    comb = Aoc.Y2023.Day19.combinations(solutions)
-    IO.puts("comb: #{comb}")
-    # assert
+    _comb = Aoc.Y2023.Day19.combinations(solutions)
   end
 end

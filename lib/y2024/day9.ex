@@ -31,13 +31,34 @@ defmodule Aoc.Y2024.Day9 do
     IO.inspect(id_length)
     IO.puts("Max id: #{max_id}")
     compact_disk_2_aux(disk, id_length)
-    disk
+  end
+
+  def get_highest_fitting_id(nil_size, id_length_map) do
+    id_length_map
+    |> Map.to_list()
+    |> Enum.sort(fn {a, _}, {b, _} -> a > b end)
+    |> Enum.find(fn {_id, length} -> length <= nil_size end)
+    |> case do
+      nil -> {nil, 0}
+      {id, l} -> {id, l}
+    end
   end
 
   def compact_disk_2_aux(disk, id_length_map, acc \\ []) do
     case disk do
       [] ->
-        acc
+        Enum.reverse(acc)
+
+      [nil | tl] ->
+        nil_size = (Enum.take_while(tl, &is_nil(&1)) |> length()) + 1
+        {x, x_size} = get_highest_fitting_id(nil_size, id_length_map)
+        nils_to_add = nil_size - x_size
+        acc = List.duplicate(nil, nils_to_add) ++ List.duplicate(x, x_size) ++ acc
+        id_length_map = Map.delete(id_length_map, x)
+        tl = Enum.drop(tl, nil_size - 1)
+        # if x is not nil, we have to replate x with nil
+        tl = Enum.map(tl, fn y -> if y == x, do: nil, else: y end)
+        compact_disk_2_aux(tl, id_length_map, acc)
 
       [x | tl] ->
         # remove x from the map, since this id is already in place

@@ -15,7 +15,7 @@ defmodule Aoc.Y2024.Day8Test do
   test "finding antinodes of a list" do
     list = [{5, 6}, {8, 8}, {9, 9}]
     bounds = {20, 20}
-    antinodes = Day8.find_antinodes_list(list, bounds)
+    antinodes = Day8.find_antinodes_list(list, bounds, &Day8.find_antinodes/3)
     assert length(antinodes) == 6
   end
 
@@ -24,7 +24,6 @@ defmodule Aoc.Y2024.Day8Test do
     c2 = {4, 4}
     bound = {7, 7}
 
-    antinodes = Day8.find_antinodes_2(c1, c2, bound)
-    IO.inspect(antinodes, label: "antinodes d2")
+    _antinodes = Day8.find_antinodes_2(c1, c2, bound)
   end
 end
