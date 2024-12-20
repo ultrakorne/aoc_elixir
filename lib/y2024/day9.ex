@@ -20,17 +20,57 @@ defmodule Aoc.Y2024.Day9 do
     List.duplicate(id, n)
   end
 
-  def compact_disk_2(disk) do
+  def find_nils_of_size(disk, size) do
+    {_, index, found} =
+      Enum.with_index(disk)
+      |> Enum.reduce_while({size, 0, false}, fn {value, idx}, {x, acc_index, _found} ->
+        cond do
+          value == nil and x == 1 -> {:halt, {size, acc_index, true}}
+          value == nil -> {:cont, {x - 1, acc_index, false}}
+          true -> {:cont, {size, idx + 1, false}}
+        end
+      end)
+
+    if found, do: index, else: nil
+  end
+
+  def replace_at_index(list, index, value, count) do
+    {left, right} = Enum.split(list, index)
+    right = Enum.drop(right, count)
+    left ++ List.duplicate(value, count) ++ right
+  end
+
+  def compact_disk_2b(disk) do
     id_length = Enum.frequencies(disk) |> Map.delete(nil)
+    compact_disk_2b_aux(disk, id_length)
+  end
 
-    max_id =
-      id_length
-      |> Map.keys()
-      |> Enum.max()
+  def compact_disk_2b_aux(disk, id_length_map) do
+    if map_size(id_length_map) == 0 do
+      disk
+    else
+      id =
+        id_length_map
+        |> Map.keys()
+        |> Enum.max()
 
-    IO.inspect(id_length)
-    IO.puts("Max id: #{max_id}")
-    compact_disk_2_aux(disk, id_length)
+      size_of_id = Map.get(id_length_map, id)
+
+      # we need to find the first nils that would fit the size_od_id on the left side of the the disk
+      disk_left = Enum.take_while(disk, &(&1 != id))
+      index_of_nils_of_size = find_nils_of_size(disk_left, size_of_id)
+
+      id_length_map = Map.delete(id_length_map, id)
+
+      if index_of_nils_of_size == nil do
+        # id cannot be moved
+        compact_disk_2b_aux(disk, id_length_map)
+      else
+        disk = Enum.map(disk, fn x -> if x == id, do: nil, else: x end)
+        disk = replace_at_index(disk, index_of_nils_of_size, id, size_of_id)
+        compact_disk_2b_aux(disk, id_length_map)
+      end
+    end
   end
 
   def get_highest_fitting_id(nil_size, id_length_map) do
@@ -39,32 +79,16 @@ defmodule Aoc.Y2024.Day9 do
     |> Enum.sort(fn {a, _}, {b, _} -> a > b end)
     |> Enum.find(fn {_id, length} -> length <= nil_size end)
     |> case do
-      nil -> {nil, 0}
+      nil -> {nil, nil_size}
       {id, l} -> {id, l}
     end
   end
 
-  def compact_disk_2_aux(disk, id_length_map, acc \\ []) do
-    case disk do
-      [] ->
-        Enum.reverse(acc)
-
-      [nil | tl] ->
-        nil_size = (Enum.take_while(tl, &is_nil(&1)) |> length()) + 1
-        {x, x_size} = get_highest_fitting_id(nil_size, id_length_map)
-        nils_to_add = nil_size - x_size
-        acc = List.duplicate(nil, nils_to_add) ++ List.duplicate(x, x_size) ++ acc
-        id_length_map = Map.delete(id_length_map, x)
-        tl = Enum.drop(tl, nil_size - 1)
-        # if x is not nil, we have to replate x with nil
-        tl = Enum.map(tl, fn y -> if y == x, do: nil, else: y end)
-        compact_disk_2_aux(tl, id_length_map, acc)
-
-      [x | tl] ->
-        # remove x from the map, since this id is already in place
-        id_length_map = Map.delete(id_length_map, x)
-        compact_disk_2_aux(tl, id_length_map, [x | acc])
-    end
+  def disk_to_string(disk) do
+    Enum.reduce(disk, "", fn x, acc ->
+      str = if is_nil(x), do: ".", else: to_string(x)
+      acc <> str
+    end)
   end
 
   def compact_disk(disk) do
@@ -74,8 +98,6 @@ defmodule Aoc.Y2024.Day9 do
     to_move_buffer = Enum.filter(disk, &(!is_nil(&1))) |> Enum.reverse()
     disk_part = Enum.take(disk, file_amount)
 
-    IO.puts("File amount: #{file_amount}")
-    IO.puts("Nil amount: #{nil_amount}")
     compact_disk_aux(disk_part, to_move_buffer)
   end
 
@@ -97,6 +119,7 @@ defmodule Aoc.Y2024.Day9 do
     disk
     |> Stream.with_index()
     |> Enum.reduce(0, fn {value, idx}, acc ->
+      value = if value == nil, do: 0, else: value
       acc + value * idx
     end)
   end
@@ -110,9 +133,10 @@ defmodule Aoc.Y2024.Day9 do
   end
 
   def execute_2() do
-    File.read!("data/2024/day9_test.txt")
+    File.read!("data/2024/day9.txt")
     |> String.graphemes()
     |> decompress_disc()
-    |> compact_disk_2()
+    |> compact_disk_2b()
+    |> checksum()
   end
 end

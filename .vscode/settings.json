@@ -1,0 +1,6 @@
+{
+    "emmet.triggerExpansionOnTab": false,
+    "emmet.includeLanguages": {
+        "elixir": ""
+      }
+}
