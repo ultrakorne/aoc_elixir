@@ -46,10 +46,7 @@ defmodule Aoc.Y2024.Day9Test do
       |> Day9.compact_disk_2b()
       |> Day9.disk_to_string()
 
-    IO.inspect(result, label: "Result")
-
     assert result == "00992111777.44.333....5555.6666.....8888.."
-    # result should be 00992111777.44.333....5555.6666.....8888..
   end
 
   test "day 2 checksum" do
