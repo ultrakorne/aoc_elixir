@@ -40,14 +40,4 @@ defmodule Aoc.Y2024.Day10Test do
 
     assert hiking_scores == [5, 6, 5, 3, 1, 3, 5, 3, 5]
   end
-
-  test "finding all the hiking trail scores for the test input for Day 2" do
-    grid = Helper.parse_grid("data/2024/day10_test.txt")
-
-    hiking_scores =
-      Day10.find_trailheads(grid)
-      |> Day10.find_hiking_trail_score_2(grid)
-
-    IO.inspect(hiking_scores, label: "Hiking scores day 2")
-  end
 end
