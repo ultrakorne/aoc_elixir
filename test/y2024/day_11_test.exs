@@ -15,15 +15,15 @@ defmodule Aoc.Y2024.Day11Test do
   end
 
   test "blink n times" do
-    blink_n = Day11.blink_n(125, 4)
+    blink_n = Day11.blink_n(125, {0, 4})
     assert blink_n == 3
 
-    blink_left = Day11.blink_n(125, 6)
-    blink_right = Day11.blink_n(17, 6)
+    blink_left = Day11.blink_n(125, {0, 6})
+    blink_right = Day11.blink_n(17, {0, 6})
     assert blink_left + blink_right == 22
 
-    blink_left = Day11.blink_n(125, 6)
-    blink_right = Day11.blink_n(17, 6)
+    blink_left = Day11.blink_n(125, {0, 6})
+    blink_right = Day11.blink_n(17, {0, 6})
     assert blink_left + blink_right == 22
 
     blink_all = Day11.blink_n([125, 17], 25)

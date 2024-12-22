@@ -26,44 +26,65 @@ defmodule Aoc.Y2024.Day11 do
   end
 
   def blink_n(stones, n) when is_list(stones) do
-    Enum.reduce(stones, 0, fn x, acc -> acc + blink_n(x, n) end)
+    Enum.reduce(stones, 0, fn x, acc ->
+      {result, _cache} = blink_n(x, {0, n})
+      acc + result
+    end)
   end
 
   @doc """
   blink a stone n times, return the amount of stone after n times
   """
-  def blink_n(stone, n, acc \\ 1) do
+  def blink_n(stone, {c, max}, acc \\ 1, cache \\ %{}) when is_integer(stone) do
+    blinks_left = max - c
+    acc_init = acc
     result = blink(stone)
     acc = acc + length(result) - 1
-    n = n - 1
+    c = c + 1
 
-    if n == 0 do
-      acc
-    else
-      case result do
-        [x] ->
-          blink_n(x, n, acc)
+    cache_value = Map.get(cache, {stone, blinks_left})
 
-        [x, y] ->
-          new_acc = blink_n(x, n, acc)
-          blink_n(y, n, new_acc)
+    # if cache_value do
+    #   IO.puts("+++ cache exist #{stone}:#{blinks_left} => cache: #{cache_value}")
+    # end
+
+    {output, cache} =
+      cond do
+        c == max ->
+          {acc, cache}
+
+        cache_value != nil ->
+          {acc_init + cache_value, cache}
+
+        true ->
+          case result do
+            [x] ->
+              blink_n(x, {c, max}, acc, cache)
+
+            [x, y] ->
+              {new_acc, cache} = blink_n(x, {c, max}, acc, cache)
+              blink_n(y, {c, max}, new_acc, cache)
+          end
       end
-    end
+
+    delta_acc = output - acc_init
+    # output = delta_acc + acc_init
+    cache = Map.put(cache, {stone, blinks_left}, delta_acc)
+    # IO.puts("#{stone}:#{blinks_left} => output: #{delta_acc}")
+    {output, cache}
   end
 
   def execute_1() do
     File.read!("data/2024/day11.txt")
     |> String.split(" ", trim: true)
     |> Enum.map(&String.to_integer/1)
-    |> Task.async_stream(&blink_n(&1, 75),
-      max_concurrency: System.schedulers_online(),
-      timeout: :infinity
-    )
-    |> Enum.map(fn {:ok, result} -> result end)
-    |> Enum.sum()
+    |> blink_n(25)
   end
 
   def execute_2() do
-    IO.puts("Day 11 - Part 2")
+    File.read!("data/2024/day11.txt")
+    |> String.split(" ", trim: true)
+    |> Enum.map(&String.to_integer/1)
+    |> blink_n(75)
   end
 end
