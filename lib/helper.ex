@@ -15,7 +15,14 @@ defmodule Aoc.Helper do
   end
 
   def parse_grid(file_path) do
-    read_file(file_path)
+    file_path
+    |> File.read!()
+    |> parse_grid_from_string()
+  end
+
+  def parse_grid_from_string(grid_string) do
+    grid_string
+    |> String.split("\n", trim: true)
     |> Stream.with_index()
     |> Enum.reduce(%{}, fn {line, index}, acc -> parse_line(line, index, acc) end)
   end

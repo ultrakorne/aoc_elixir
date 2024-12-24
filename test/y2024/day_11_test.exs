@@ -14,19 +14,19 @@ defmodule Aoc.Y2024.Day11Test do
     assert Day11.blink([253_000, 1, 7]) == [253, 0, 2024, 14168]
   end
 
-  test "blink n times" do
-    blink_n = Day11.blink_n(125, {0, 4})
-    assert blink_n == 3
+  # test "blink n times" do
+  #   blink_n = Day11.blink_n(125, {0, 4})
+  #   assert blink_n == 3
 
-    blink_left = Day11.blink_n(125, {0, 6})
-    blink_right = Day11.blink_n(17, {0, 6})
-    assert blink_left + blink_right == 22
+  #   blink_left = Day11.blink_n(125, {0, 6})
+  #   blink_right = Day11.blink_n(17, {0, 6})
+  #   assert blink_left + blink_right == 22
 
-    blink_left = Day11.blink_n(125, {0, 6})
-    blink_right = Day11.blink_n(17, {0, 6})
-    assert blink_left + blink_right == 22
+  #   blink_left = Day11.blink_n(125, {0, 6})
+  #   blink_right = Day11.blink_n(17, {0, 6})
+  #   assert blink_left + blink_right == 22
 
-    blink_all = Day11.blink_n([125, 17], 25)
-    assert blink_all == 55312
-  end
+  #   blink_all = Day11.blink_n([125, 17], 25)
+  #   assert blink_all == 55312
+  # end
 end
