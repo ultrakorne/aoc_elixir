@@ -43,14 +43,14 @@ defmodule Aoc.Y2024.Day12Test do
     result =
       map
       |> Map.get("X")
-      |> Day12.fence_price(grid)
+      |> Day12.fence_price(grid, &Day12.plot_perimeter/3)
 
     assert result == 16
 
     result_2 =
       map
       |> Map.get("O")
-      |> Day12.fence_price(grid)
+      |> Day12.fence_price(grid, &Day12.plot_perimeter/3)
 
     assert result_2 == 756
   end
@@ -58,8 +58,35 @@ defmodule Aoc.Y2024.Day12Test do
   test "test input day1" do
     result =
       Helper.parse_grid("data/2024/day12_test.txt")
-      |> Day12.fence_price_tot()
+      |> Day12.fence_price_tot(&Day12.plot_perimeter/3)
 
     assert result == 1930
+  end
+
+  test "test perimeter day2" do
+    grid =
+      """
+      OOOOO
+      OXXXO
+      OXXXO
+      OXOXO
+      """
+      |> Helper.parse_grid_from_string()
+
+    perimeter =
+      grid
+      |> Enum.group_by(fn {_, v} -> v end)
+      |> Map.get("X")
+      |> Day12.plot_perimeter_2(grid)
+
+    assert perimeter == 8
+  end
+
+  test "test input day2" do
+    result =
+      Helper.parse_grid("data/2024/day12_test.txt")
+      |> Day12.fence_price_tot(&Day12.plot_perimeter_2/3)
+
+    assert result == 1206
   end
 end
