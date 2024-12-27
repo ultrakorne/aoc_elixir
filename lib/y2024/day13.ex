@@ -1,9 +1,18 @@
+defmodule Y2024.Day13.ClawMachine do
+  defstruct button_a: {0, 0}, button_b: {0, 0}, prize: {0, 0}
+end
+
 defmodule Aoc.Y2024.Day13 do
-  @epsilon 1.0e-9
+  alias Y2024.Day13.ClawMachine
+  @epsilon 1.0e-3
 
   def round_if_int(x) do
     rounded = Float.round(x)
     if abs(x - rounded) < @epsilon, do: trunc(rounded), else: 0
+  end
+
+  def solve_price(%{button_a: {ax, ay}, button_b: {bx, by}, prize: {x, y}}) do
+    solve_price(ax, ay, bx, by, x, y)
   end
 
   def solve_price(ax, ay, bx, by, x, y) do
@@ -47,10 +56,58 @@ defmodule Aoc.Y2024.Day13 do
   end
 
   def execute_1() do
-    File.read!("data/2024/day13_test.txt")
-    |> String.split("\n")
-    |> Enum.chunk_by(fn x -> x == "" end)
-    |> Enum.reject(fn x -> x == [""] end)
-    |> IO.inspect()
+    File.read!("data/2024/day13.txt")
+    |> String.split("\r\n")
+    |> Stream.chunk_by(fn x -> x == "" end)
+    |> Stream.reject(fn x -> x == [""] end)
+    |> Stream.map(fn x -> x |> Enum.join(" ") end)
+    |> Stream.map(fn str ->
+      ~r/.*Button A: X\+(\d+), Y\+(\d+).*Button B: X\+(\d+), Y\+(\d+).*Prize: X=(\d+), Y=(\d+)/
+      |> Regex.scan(str)
+      |> hd()
+      |> tl()
+      |> create_claw_machine()
+    end)
+    |> Enum.reduce(0, fn claw_machine, acc ->
+      acc + solve_price(claw_machine)
+    end)
+  end
+
+  def execute_2() do
+    File.read!("data/2024/day13.txt")
+    |> String.split("\r\n")
+    |> Stream.chunk_by(fn x -> x == "" end)
+    |> Stream.reject(fn x -> x == [""] end)
+    |> Stream.map(fn x -> x |> Enum.join(" ") end)
+    |> Stream.map(fn str ->
+      ~r/.*Button A: X\+(\d+), Y\+(\d+).*Button B: X\+(\d+), Y\+(\d+).*Prize: X=(\d+), Y=(\d+)/
+      |> Regex.scan(str)
+      |> hd()
+      |> tl()
+      |> create_claw_machine_2()
+    end)
+    |> Enum.reduce(0, fn claw_machine, acc ->
+      price = solve_price(claw_machine)
+      # IO.inspect(claw_machine)
+      # IO.puts("Price: #{price}")
+      acc + price
+    end)
+  end
+
+  defp create_claw_machine([ax, ay, bx, by, x, y]) do
+    %ClawMachine{
+      button_a: {String.to_integer(ax), String.to_integer(ay)},
+      button_b: {String.to_integer(bx), String.to_integer(by)},
+      prize: {String.to_integer(x), String.to_integer(y)}
+    }
+  end
+
+  defp create_claw_machine_2([ax, ay, bx, by, x, y]) do
+    %ClawMachine{
+      button_a: {String.to_integer(ax), String.to_integer(ay)},
+      button_b: {String.to_integer(bx), String.to_integer(by)},
+      prize:
+        {String.to_integer(x) + 10_000_000_000_000, String.to_integer(y) + 10_000_000_000_000}
+    }
   end
 end
