@@ -47,7 +47,7 @@ defmodule Aoc.Y2024.Day14 do
 
     state_after =
       parse_input("data/2024/day14.txt")
-      |> Enum.map(fn robot -> move_robot(robot, 7412, width, height) end)
+      |> Enum.map(fn robot -> move_robot(robot, 100, width, height) end)
 
     get_quadrants(width, height)
     |> Enum.reduce(1, fn {x1, y1, x2, y2}, acc ->
@@ -79,19 +79,14 @@ defmodule Aoc.Y2024.Day14 do
 
     grid = parse_input("data/2024/day14.txt")
 
-    _find_tree =
-      1..1_000_000_00
-      |> Stream.each(fn seconds ->
-        state_after = Enum.map(grid, fn robot -> move_robot(robot, seconds, width, height) end)
+    1..1_000_000_00
+    |> Enum.reduce_while(0, fn seconds, acc ->
+      cluster =
+        grid
+        |> Enum.map(fn robot -> move_robot(robot, seconds, width, height) end)
+        |> is_possible_tree()
 
-        clusters = is_possible_tree(state_after)
-
-        if clusters > 200 do
-          IO.inspect(seconds, label: "Seconds")
-          IO.inspect(clusters, label: "Clusters")
-          # print_tree(state_after)
-        end
-      end)
-      |> Stream.run()
+      if cluster > 200, do: {:halt, seconds}, else: {:cont, acc}
+    end)
   end
 end
