@@ -1,8 +1,10 @@
 defmodule Aoc.Helper do
+  @eol if match?({:win32, _}, :os.type()), do: "\r\n", else: "\n"
+
   def read_file(file_path) do
     file_path
     |> File.read!()
-    |> String.split("\n", trim: true)
+    |> String.split(@eol, trim: true)
   end
 
   defp parse_line(line, x, map) do
@@ -22,7 +24,7 @@ defmodule Aoc.Helper do
 
   def parse_grid_from_string(grid_string) do
     grid_string
-    |> String.split("\n", trim: true)
+    |> String.split(@eol, trim: true)
     |> Stream.with_index()
     |> Enum.reduce(%{}, fn {line, index}, acc -> parse_line(line, index, acc) end)
   end
