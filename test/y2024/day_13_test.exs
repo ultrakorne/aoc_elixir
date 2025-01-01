@@ -15,16 +15,13 @@ defmodule Aoc.Y2024.Day13Test do
   end
 
   test "solve matrix" do
-    solution = Day13.solve_price(94, 34, 22, 67, 8400, 5400)
-    IO.inspect(solution, label: "Solution")
+    _solution = Day13.solve_price(94, 34, 22, 67, 8400, 5400)
 
-    solution_2 = Day13.solve_price(26, 66, 67, 21, 12748, 12176)
-    IO.inspect(solution_2, label: "Solution 2")
+    _solution_2 = Day13.solve_price(26, 66, 67, 21, 12748, 12176)
 
     #     Button A: X+17, Y+86
     # Button B: X+84, Y+37
     # Prize: X=7870, Y=6450
-    solution_3 = Day13.solve_price(17, 86, 84, 37, 7870, 6450)
-    IO.inspect(solution_3, label: "Solution 3")
+    _solution_3 = Day13.solve_price(17, 86, 84, 37, 7870, 6450)
   end
 end

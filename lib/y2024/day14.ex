@@ -59,18 +59,11 @@ defmodule Aoc.Y2024.Day14 do
   end
 
   defp is_possible_tree(state_after) do
-    clusters =
-      Enum.sort(state_after, fn {x1, y1}, {x2, y2} -> if x1 == x2, do: y1 < y2, else: x1 < x2 end)
-      |> Enum.reduce({0, 0}, fn {x, y}, {acc, prev_xy} ->
-        if abs(x + y - prev_xy) <= 1 do
-          {acc + 1, x + y}
-        else
-          {acc, x + y}
-        end
-      end)
-      |> elem(0)
-
-    clusters
+    Enum.sort(state_after, fn {x1, y1}, {x2, y2} -> if x1 == x2, do: y1 < y2, else: x1 < x2 end)
+    |> Enum.reduce({0, 0}, fn {x, y}, {acc, prev_xy} ->
+      if abs(x + y - prev_xy) <= 1, do: {acc + 1, x + y}, else: {acc, x + y}
+    end)
+    |> elem(0)
   end
 
   def execute_2() do
@@ -79,7 +72,7 @@ defmodule Aoc.Y2024.Day14 do
 
     grid = parse_input("data/2024/day14.txt")
 
-    1..1_000_000_00
+    1..100_000_000
     |> Enum.reduce_while(0, fn seconds, acc ->
       cluster =
         grid
