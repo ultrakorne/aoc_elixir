@@ -83,17 +83,17 @@ defmodule Aoc.Y2024.Day15Test do
   test "day 2 pushing" do
     {grid, directions} =
       """
-      #######
-      #...#.#
-      #..O..#
-      #..O..#
-      #..O..#
-      #..@..#
-      #######
+      ##############
+      ##......##..##
+      ##..[][]....##
+      ##...[].....##
+      ##....[]....##
+      ##....@.....##
+      ##############
 
       ^
       """
-      |> Day15.parse_grid_day_2()
+      |> Day15.parse_grid()
 
     new_grid = Day15.move_push_2({grid, directions})
 

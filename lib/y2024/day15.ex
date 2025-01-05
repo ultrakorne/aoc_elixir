@@ -32,17 +32,6 @@ defmodule Aoc.Y2024.Day15 do
     end
   end
 
-  def parse_grid(str) do
-    [grid_list, moves] =
-      str
-      |> String.split(Helper.eol())
-      |> Enum.chunk_by(fn line -> line == "" end)
-      |> Enum.reject(fn chunk -> chunk == [""] end)
-
-    grid = Helper.parse_grid_from_list(grid_list, false)
-    {grid, Enum.join(moves)}
-  end
-
   defp widen_room(line, result \\ "") do
     case line do
       [] -> result
@@ -53,7 +42,7 @@ defmodule Aoc.Y2024.Day15 do
     end
   end
 
-  def parse_grid_day_2(str) do
+  def parse_grid(str, widen? \\ false) do
     [grid_list, moves] =
       str
       |> String.split(Helper.eol())
@@ -61,8 +50,9 @@ defmodule Aoc.Y2024.Day15 do
       |> Enum.reject(fn chunk -> chunk == [""] end)
 
     grid_list =
-      grid_list
-      |> Enum.map(fn line -> widen_room(String.graphemes(line)) end)
+      if widen?,
+        do: Enum.map(grid_list, &widen_room(String.graphemes(&1))),
+        else: grid_list
 
     grid = Helper.parse_grid_from_list(grid_list, false)
     {grid, Enum.join(moves)}
@@ -87,14 +77,15 @@ defmodule Aoc.Y2024.Day15 do
     end
   end
 
-  defp move_coord({x, y}, dir) do
-    case dir do
-      "<" -> {x - 1, y}
-      ">" -> {x + 1, y}
-      "^" -> {x, y - 1}
-      "v" -> {x, y + 1}
-    end
-  end
+  defp move_coord({x, y}, "<"), do: {x - 1, y}
+  defp move_coord({x, y}, ">"), do: {x + 1, y}
+  defp move_coord({x, y}, "^"), do: {x, y - 1}
+  defp move_coord({x, y}, "v"), do: {x, y + 1}
+
+  defp opposite_dir("<"), do: ">"
+  defp opposite_dir(">"), do: "<"
+  defp opposite_dir("^"), do: "v"
+  defp opposite_dir("v"), do: "^"
 
   def replace_grid_slice(grid, {x, y}, dir, slice) do
     graphemes = String.graphemes(slice)
@@ -153,8 +144,16 @@ defmodule Aoc.Y2024.Day15 do
   end
 
   defp move_robot_2(grid, pos, dir) do
-    {did_push?, new_grid} = push(grid, pos, dir, grid)
-    if did_push?, do: new_grid, else: grid
+    {did_push?, new_grid, _} = push(grid, pos, dir, grid)
+
+    if did_push? do
+      # move robot now that there is space
+      new_grid
+      |> Map.put(pos, "@")
+      |> Map.put(move_coord(pos, opposite_dir(dir)), ".")
+    else
+      grid
+    end
   end
 
   defp get_lateral_pos(pos, "["), do: move_coord(pos, ">")
@@ -166,61 +165,56 @@ defmodule Aoc.Y2024.Day15 do
          dir,
          new_grid,
          insert \\ ".",
-         recurse \\ true,
          already_moved \\ MapSet.new()
        ) do
     already_moved? = MapSet.member?(already_moved, pos)
+    already_moved = MapSet.put(already_moved, pos)
+    at_pos = Map.get(new_grid, pos)
+    # IO.inspect(already_moved, label: "already_moved")
 
     case dir do
-      _ when already_moved? ->
-        IO.puts("already moved to #{inspect(pos)}")
-        {true, new_grid}
+      _ when already_moved? and insert == "." ->
+        IO.puts("already moved to #{inspect(pos)}. at_pos #{at_pos} insert #{insert}")
+        {true, new_grid, already_moved}
 
       dir when dir in ["^", "v"] ->
-        at_pos = Map.get(grid, pos)
-        # if insert == x, insert . if it was not visited already
-
-        # insert =
-        #   cond do
-        #     insert == "x" and MapSet.member?(already_moved, pos) -> "."
-        #     insert == "x" -> at_pos
-        #     true -> insert
-        #   end
-
         case at_pos do
           "." ->
             new_grid = Map.put(new_grid, pos, insert)
             IO.puts("found . at #{inspect(pos)}, inserting #{insert}")
-            {true, new_grid}
+            {true, new_grid, already_moved}
 
           "#" ->
-            {false, grid}
+            {false, grid, already_moved}
 
-          at_pos when at_pos in ["[", "]"] and recurse ->
-            # new_grid = Map.put(new_grid, pos, insert)
+          at_pos when at_pos in ["[", "]"] ->
+            new_grid = Map.put(new_grid, pos, insert)
             lateral_position = get_lateral_pos(pos, at_pos)
             IO.puts("checking laterally #{at_pos} at #{inspect(pos)}")
 
-            {can_push?, new_grid} =
-              push(grid, lateral_position, dir, new_grid, ".", false, already_moved)
+            {can_push?, new_grid, already_moved} =
+              push(grid, lateral_position, dir, new_grid, ".", already_moved)
+
+            IO.puts("can_push? #{can_push?} at #{inspect(pos)}")
 
             if can_push? do
-              already_moved = MapSet.put(already_moved, pos)
+              # already_moved = MapSet.put(already_moved, pos)
 
-              {can_push?, new_grid} =
+              {can_push?, new_grid, already_moved} =
                 push(grid, move_coord(pos, dir), dir, new_grid, at_pos, already_moved)
 
-              new_grid = Map.put(new_grid, pos, insert)
+              # new_grid = Map.put(new_grid, pos, insert)
               IO.puts("found #{at_pos} at #{inspect(pos)} inserting #{insert}")
-              {can_push?, new_grid}
+              {can_push?, new_grid, already_moved}
             else
-              {false, grid}
+              {false, grid, already_moved}
             end
 
           _ ->
             new_grid = Map.put(new_grid, pos, insert)
+            IO.puts("NEVER")
             IO.puts("at_pos #{at_pos} at #{inspect(pos)} insert #{insert}")
-            already_moved = MapSet.put(already_moved, pos)
+            # already_moved = MapSet.put(already_moved, pos)
             push(grid, move_coord(pos, dir), dir, new_grid, at_pos, already_moved)
         end
 
