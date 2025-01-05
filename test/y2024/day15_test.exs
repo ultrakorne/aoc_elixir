@@ -45,7 +45,7 @@ defmodule Aoc.Y2024.Day15Test do
   end
 
   test "grid slice" do
-    {grid, _} = "data/2024/day15_test.txt" |> File.read!() |> Day15.parse_grid()
+    {grid, _} = "data/2024/day15_test_2.txt" |> File.read!() |> Day15.parse_grid()
     robot_pos = Day15.find_robot(grid)
     assert robot_pos == {2, 2}
 
@@ -63,7 +63,7 @@ defmodule Aoc.Y2024.Day15Test do
   end
 
   test "replace slice" do
-    {grid, _} = "data/2024/day15_test.txt" |> File.read!() |> Day15.parse_grid()
+    {grid, _} = "data/2024/day15_test_2.txt" |> File.read!() |> Day15.parse_grid()
     new_grid = Day15.replace_grid_slice(grid, {2, 2}, "<", "@.#")
 
     assert Map.get(new_grid, {2, 2}) == "@"
@@ -72,11 +72,32 @@ defmodule Aoc.Y2024.Day15Test do
   end
 
   test "move push" do
-    {grid, _} = "data/2024/day15_test.txt" |> File.read!() |> Day15.parse_grid()
-    new_grid = Day15.move_push(grid, "^")
+    {grid, _} = "data/2024/day15_test_2.txt" |> File.read!() |> Day15.parse_grid()
+    new_grid = Day15.move_push({grid, "^"})
 
     assert Map.get(new_grid, {2, 2}) == "."
     assert Map.get(new_grid, {2, 1}) == "@"
     assert Map.get(new_grid, {2, 0}) == "#"
+  end
+
+  test "day 2 pushing" do
+    {grid, directions} =
+      """
+      #######
+      #...#.#
+      #..O..#
+      #..O..#
+      #..O..#
+      #..@..#
+      #######
+
+      ^
+      """
+      |> Day15.parse_grid_day_2()
+
+    new_grid = Day15.move_push_2({grid, directions})
+
+    new_grid
+    |> Aoc.Helper.print_grid()
   end
 end

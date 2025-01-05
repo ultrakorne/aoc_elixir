@@ -37,6 +37,22 @@ defmodule Aoc.Helper do
     |> parse_grid_from_list(flip_ax)
   end
 
+  def print_grid(grid) do
+    {max_x, max_y} = grid_size(grid)
+
+    IO.puts("")
+
+    for y <- 0..max_y do
+      for x <- 0..max_x do
+        IO.write(Map.get(grid, {x, y}, "."))
+      end
+
+      IO.puts("")
+    end
+
+    grid
+  end
+
   def grid_size(grid) do
     grid
     |> Map.keys()
