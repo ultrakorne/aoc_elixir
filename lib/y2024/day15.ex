@@ -170,19 +170,15 @@ defmodule Aoc.Y2024.Day15 do
     already_moved? = MapSet.member?(already_moved, pos)
     already_moved = MapSet.put(already_moved, pos)
     at_pos = Map.get(new_grid, pos)
-    # IO.inspect(already_moved, label: "already_moved")
 
     case dir do
       _ when already_moved? and insert == "." ->
-        IO.puts("already moved to #{inspect(pos)}. at_pos #{at_pos} insert #{insert}")
         {true, new_grid, already_moved}
 
-      dir when dir in ["^", "v"] ->
+      dir ->
         case at_pos do
           "." ->
-            new_grid = Map.put(new_grid, pos, insert)
-            IO.puts("found . at #{inspect(pos)}, inserting #{insert}")
-            {true, new_grid, already_moved}
+            {true, Map.put(new_grid, pos, insert), already_moved}
 
           "#" ->
             {false, grid, already_moved}
@@ -190,21 +186,14 @@ defmodule Aoc.Y2024.Day15 do
           at_pos when at_pos in ["[", "]"] ->
             new_grid = Map.put(new_grid, pos, insert)
             lateral_position = get_lateral_pos(pos, at_pos)
-            IO.puts("checking laterally #{at_pos} at #{inspect(pos)}")
 
             {can_push?, new_grid, already_moved} =
               push(grid, lateral_position, dir, new_grid, ".", already_moved)
 
-            IO.puts("can_push? #{can_push?} at #{inspect(pos)}")
-
             if can_push? do
-              # already_moved = MapSet.put(already_moved, pos)
-
               {can_push?, new_grid, already_moved} =
                 push(grid, move_coord(pos, dir), dir, new_grid, at_pos, already_moved)
 
-              # new_grid = Map.put(new_grid, pos, insert)
-              IO.puts("found #{at_pos} at #{inspect(pos)} inserting #{insert}")
               {can_push?, new_grid, already_moved}
             else
               {false, grid, already_moved}
@@ -217,16 +206,16 @@ defmodule Aoc.Y2024.Day15 do
             # already_moved = MapSet.put(already_moved, pos)
             push(grid, move_coord(pos, dir), dir, new_grid, at_pos, already_moved)
         end
-
-      dir ->
-        nil
     end
   end
 
   def box_scores(grid) do
     grid
     |> Map.keys()
-    |> Enum.filter(fn {x, y} -> Map.get(grid, {x, y}) == "O" end)
+    |> Enum.filter(fn {x, y} ->
+      v = Map.get(grid, {x, y})
+      v == "O" or v == "["
+    end)
     |> Enum.reduce(0, fn {x, y}, acc ->
       acc + 100 * y + x
     end)
@@ -241,15 +230,10 @@ defmodule Aoc.Y2024.Day15 do
   end
 
   def execute_2() do
-    # {grid, directions} =
-    #   "data/2024/day15_test.txt"
-    #   |> File.read!()
-    #   |> parse_grid_day_2()
-
-    0
-    # new_grid = move_push_2({grid, directions})
-
-    # grid
-    # |> Helper.print_grid()
+    "data/2024/day15.txt"
+    |> File.read!()
+    |> parse_grid(true)
+    |> move_push_2()
+    |> box_scores()
   end
 end

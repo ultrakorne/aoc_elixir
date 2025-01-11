@@ -81,7 +81,7 @@ defmodule Aoc.Y2024.Day15Test do
   end
 
   test "day 2 pushing" do
-    {grid, directions} =
+    str_grid =
       """
       ##############
       ##......##..##
@@ -94,10 +94,125 @@ defmodule Aoc.Y2024.Day15Test do
       ^
       """
       |> Day15.parse_grid()
+      |> Day15.move_push_2()
+      |> Aoc.Helper.grid_to_string()
 
-    new_grid = Day15.move_push_2({grid, directions})
+    assert str_grid ==
+             """
+             ##############
+             ##..[][]##..##
+             ##...[].....##
+             ##....[]....##
+             ##....@.....##
+             ##..........##
+             ##############
+             """
+  end
 
-    new_grid
-    |> Aoc.Helper.print_grid()
+  test "cannot push down" do
+    str_grid =
+      """
+      ##############
+      ##..@...##..##
+      ##..[][]....##
+      ##...[].....##
+      ##....[]....##
+      ##.....#....##
+      ##############
+
+      v
+      """
+      |> Day15.parse_grid()
+      |> Day15.move_push_2()
+      |> Aoc.Helper.grid_to_string()
+
+    assert str_grid ==
+             """
+             ##############
+             ##..@...##..##
+             ##..[][]....##
+             ##...[].....##
+             ##....[]....##
+             ##.....#....##
+             ##############
+             """
+  end
+
+  test "day 2 pushing down" do
+    str_grid =
+      """
+      ##############
+      ##..@...##..##
+      ##..[][]....##
+      ##...[].....##
+      ##....[]....##
+      ##..........##
+      ##############
+
+      v
+      """
+      |> Day15.parse_grid()
+      |> Day15.move_push_2()
+      |> Aoc.Helper.grid_to_string()
+
+    assert str_grid ==
+             """
+             ##############
+             ##......##..##
+             ##..@.[]....##
+             ##..[]......##
+             ##...[].....##
+             ##....[]....##
+             ##############
+             """
+  end
+
+  test "day 2 right" do
+    str_grid =
+      """
+      ##############
+      ##......##..##
+      ##.@[][].[].##
+      ##...[].....##
+      ##....[]....##
+      ##..........##
+      ##############
+
+      >
+      """
+      |> Day15.parse_grid()
+      |> Day15.move_push_2()
+      |> Aoc.Helper.grid_to_string()
+
+    assert str_grid ==
+             """
+             ##############
+             ##......##..##
+             ##..@[][][].##
+             ##...[].....##
+             ##....[]....##
+             ##..........##
+             ##############
+             """
+  end
+
+  test "day 2 simple test case" do
+    result =
+      """
+      #######
+      #...#.#
+      #.....#
+      #..OO@#
+      #..O..#
+      #.....#
+      #######
+
+      <vv<<^^<<^^
+      """
+      |> Day15.parse_grid(true)
+      |> Day15.move_push_2()
+      |> Day15.box_scores()
+
+    assert result == 618
   end
 end

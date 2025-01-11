@@ -53,6 +53,21 @@ defmodule Aoc.Helper do
     grid
   end
 
+  def grid_to_string(grid) do
+    {max_x, max_y} = grid_size(grid)
+
+    result =
+      for y <- 0..max_y do
+        for x <- 0..max_x do
+          Map.get(grid, {x, y}, ".")
+        end
+        |> Enum.join("")
+      end
+      |> Enum.join("\n")
+
+    result <> "\n"
+  end
+
   def grid_size(grid) do
     grid
     |> Map.keys()
