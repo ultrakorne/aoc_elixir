@@ -1,37 +1,6 @@
 defmodule Aoc.Y2024.Day15 do
   alias Aoc.Helper
 
-  def move_robot(str) do
-    case String.graphemes(str) do
-      ["@", "." | rest] ->
-        ".@" <> Enum.join(rest)
-
-      ["@", "#" | _] ->
-        str
-
-      ["@", "O" | rest] ->
-        result = move_robot_aux(["O" | rest])
-        if String.length(result) < String.length(str) - 1, do: ".@" <> result, else: "@" <> result
-
-      _ ->
-        raise "move_robot should always start with @"
-    end
-  end
-
-  defp move_robot_aux(char_list) do
-    case char_list do
-      ["O", "." | rest] ->
-        "O" <> Enum.join(rest)
-
-      ["O", "#" | _] ->
-        Enum.join(char_list)
-
-      ["O", "O" | rest] ->
-        try_move = move_robot_aux(["O" | rest])
-        "O" <> try_move
-    end
-  end
-
   defp widen_room(line, result \\ "") do
     case line do
       [] -> result
@@ -64,19 +33,6 @@ defmodule Aoc.Y2024.Day15 do
     |> Enum.find(fn coord -> Map.get(grid, coord) == "@" end)
   end
 
-  def get_grid_slice(grid, {x, y}, dir, acc \\ "") do
-    result = Map.get(grid, {x, y})
-
-    case result do
-      nil ->
-        acc
-
-      r ->
-        next_pos = move_coord({x, y}, dir)
-        get_grid_slice(grid, next_pos, dir, acc <> r)
-    end
-  end
-
   defp move_coord({x, y}, "<"), do: {x - 1, y}
   defp move_coord({x, y}, ">"), do: {x + 1, y}
   defp move_coord({x, y}, "^"), do: {x, y - 1}
@@ -104,30 +60,10 @@ defmodule Aoc.Y2024.Day15 do
     end
   end
 
-  def move_push({grid, dir}) do
-    dir_list = String.graphemes(dir)
-    robot_pos = find_robot(grid)
-    move_push_aux(grid, robot_pos, dir_list)
-  end
-
   def move_push_2({grid, dir}) do
     dir_list = String.graphemes(dir)
     robot_pos = find_robot(grid)
     move_push_2_aux(grid, robot_pos, dir_list)
-  end
-
-  defp move_push_aux(grid, robot_pos, dir_list) do
-    case dir_list do
-      [] ->
-        grid
-
-      [dir | rest] ->
-        slice = get_grid_slice(grid, robot_pos, dir)
-        new_slice = move_robot(slice)
-        new_grid = replace_grid_slice(grid, robot_pos, dir, new_slice)
-        robot_pos = find_robot(new_grid)
-        move_push_aux(new_grid, robot_pos, rest)
-    end
   end
 
   defp move_push_2_aux(grid, robot_pos, dir_list) do
@@ -156,8 +92,9 @@ defmodule Aoc.Y2024.Day15 do
     end
   end
 
-  defp get_lateral_pos(pos, "["), do: move_coord(pos, ">")
-  defp get_lateral_pos(pos, "]"), do: move_coord(pos, "<")
+  defp get_lateral_pos(pos, "[", _dir), do: move_coord(pos, ">")
+  defp get_lateral_pos(pos, "]", _dir), do: move_coord(pos, "<")
+  defp get_lateral_pos(pos, "O", dir), do: move_coord(pos, dir)
 
   defp push(
          grid,
@@ -183,9 +120,9 @@ defmodule Aoc.Y2024.Day15 do
           "#" ->
             {false, grid, already_moved}
 
-          at_pos when at_pos in ["[", "]"] ->
+          at_pos ->
             new_grid = Map.put(new_grid, pos, insert)
-            lateral_position = get_lateral_pos(pos, at_pos)
+            lateral_position = get_lateral_pos(pos, at_pos, dir)
 
             {can_push?, new_grid, already_moved} =
               push(grid, lateral_position, dir, new_grid, ".", already_moved)
@@ -198,13 +135,6 @@ defmodule Aoc.Y2024.Day15 do
             else
               {false, grid, already_moved}
             end
-
-          _ ->
-            new_grid = Map.put(new_grid, pos, insert)
-            IO.puts("NEVER")
-            IO.puts("at_pos #{at_pos} at #{inspect(pos)} insert #{insert}")
-            # already_moved = MapSet.put(already_moved, pos)
-            push(grid, move_coord(pos, dir), dir, new_grid, at_pos, already_moved)
         end
     end
   end
@@ -225,7 +155,7 @@ defmodule Aoc.Y2024.Day15 do
     "data/2024/day15.txt"
     |> File.read!()
     |> parse_grid()
-    |> move_push()
+    |> move_push_2()
     |> box_scores()
   end
 
